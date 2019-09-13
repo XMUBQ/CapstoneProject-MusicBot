@@ -1,7 +1,6 @@
 import ibm_watson
 import json
 import random
-import warnings
 import spotipy
 import spotipy.util as util
 import requests
@@ -9,6 +8,8 @@ import webbrowser
 from ibm_watson import TextToSpeechV1
 from ibm_watson import SpeechToTextV1
 import simpleaudio as sa
+import sounddevice as sd
+from scipy.io.wavfile import write
 
 
 def search_music(mood): 
@@ -78,9 +79,22 @@ mood = ""
 genre = ""
 songs = []
 randomSong = 0
-
+fs = 44100  # Sample rate
+seconds = 2  # Duration of recording
 while intent != "Bye":
-    message = input("User says: ")
+    print ("Start recording")
+    myrecording = sd.rec(int(seconds * fs), samplerate=fs, channels =1)
+    sd.wait()  # Wait until recording is finished
+    write('input.wav', fs, myrecording)  # Save as WAV file 
+    
+    with open('input.wav','rb') as audio_file:
+        speech_recognition_results = speech_to_text.recognize(
+        audio=audio_file,
+        content_type='audio/wav',
+    ).get_result()
+    print (speech_recognition_results)
+    message = speech_recognition_results["results"][0]["alternatives"][0]["transcript"]
+    #message = input("User says: ")
     response = service.message(
         assistant_id='d11ac974-e98d-4324-99e4-d3640ebd3411',
         session_id=sessionId["session_id"],
@@ -114,16 +128,17 @@ while intent != "Bye":
     
     bot_answer = response["output"]["generic"][0]["text"]
     print ("Bot says: ", bot_answer)
-    with open('hello_world.wav', 'wb') as audio_file:
+    with open('output.wav', 'wb') as audio_file:
         audio_file.write(
                 text_to_speech.synthesize(
                         bot_answer,
                         voice='en-US_AllisonVoice',
                         accept='audio/wav'        
                 ).get_result().content)
-    wave_obj = sa.WaveObject.from_wave_file("hello_world.wav")
+    wave_obj = sa.WaveObject.from_wave_file("output.wav")
     play_obj = wave_obj.play()
     play_obj.wait_done()
 
+   
     
 
