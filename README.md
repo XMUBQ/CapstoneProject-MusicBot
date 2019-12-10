@@ -1,6 +1,6 @@
 # CSE5914
 Capstone5914
-ChatBox that recommend music for you.
+ChatBox that recommends music for you.
 Sponsored by IBM Watson.
 
 
